@@ -1,0 +1,48 @@
+DEWaS Laut — Web & API Terintegrasi dewas-be (dewas_db)
+
+1. Database & Struktur Data:
+   - Terkoneksi ke database MySQL `dewas_db` yang terintegrasi dengan backend Python `dewas-be`.
+   - Master data sensor tersimpan di tabel `sensors` dengan kolom `domain = 'sea'`, `device_id = 'laut-001'`, dan konfigurasi kalibrasi di kolom `config` (format JSON).
+   - Seluruh rekaman telemetri (Tinggi air pasut A16, Probe kontak air, Anemometer kecepatan angin, dan Barometer/Suhu BMP180) tersimpan di tabel `telemetry_logs` dengan `domain = 'sea'` dan metadata JSON lengkap.
+   - Perintah pengujian audio/sirine memakai tabel `audio_commands` (antrean DFPlayer).
+
+2. Akses Dashboard & Pengujian:
+   - Dashboard: http://localhost/dewas-laut/ atau http://127.0.0.1/dewas-laut/
+   - Diagnostik Koneksi & Tabel: http://localhost/dewas-laut/periksa.php
+   - API Versi: http://localhost/dewas-laut/api.php?action=build
+   - Daftar Sensor Maritim: http://localhost/dewas-laut/api.php?action=devices
+
+3. Pengaturan Firmware ESP32:
+   - API Ingest Endpoint: http://<IP-SERVER>/dewas-laut/api.php?action=ingest
+   - Method: POST
+   - Header Wajib:
+     * Content-Type: application/json
+     * X-Device-Token: dewas-2026 (sesuai kolom sensors.device_token)
+   - Payload:
+     {
+       "device_id": "laut-001",
+       "boot_id": "a06c8c71e3aad7ef",
+       "seq": 1,
+       "uptime_ms": 12345,
+       "a16_valid": true,
+       "distance_mm": 1200,
+       "probe_waspada": false,
+       "probe_siaga": false,
+       "probe_awas": false,
+       "wind_valid": true,
+       "wind_hz": 12.5,
+       "wind_mps": 4.375,
+       "wind_pulses": 38,
+       "wind_window_ms": 3000,
+       "bmp180_valid": true,
+       "pressure_hpa": 1008.25,
+       "bmp180_temp_c": 30.5,
+       "relay_on": false,
+       "device_status": 0,
+       "config_version": 1,
+       "rssi": -45
+     }
+
+4. Integrasi dengan Backend dewas-be:
+   - Telemetri laut dari dewas-laut otomatis muncul di endpoint API dewas-be:
+     `GET /api/sensors?domain=sea` dan `GET /api/sensors/SENS-SEA-LAUT-001`

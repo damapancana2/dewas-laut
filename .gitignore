@@ -1,0 +1,10 @@
+# Database dumps
+*.sql
+!schema.sql
+
+# OS & Editor
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
