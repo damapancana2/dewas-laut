@@ -148,7 +148,7 @@ for(const button of document.querySelectorAll('[data-track]')){
  button.addEventListener('click',async()=>{
   const buttons=document.querySelectorAll('[data-track]');buttons.forEach(b=>b.disabled=true);
   try{
-   const d=await api('test_audio',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({track:Number(button.dataset.track)})});
+   const d=await api('test_audio',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({track:Number(button.dataset.track),device_id:selectedDevice})});
    $('audio-message').textContent=d.message+' Nomor #'+d.id;
   }catch(e){$('audio-message').textContent=e.message;}
   finally{buttons.forEach(b=>b.disabled=false);}

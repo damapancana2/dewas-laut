@@ -45,20 +45,21 @@ try {
 
     // 4. Pengujian Suara Manual
     if ($action === 'test_audio' && $method === 'POST') {
-        requireOperator();
         session_start();
         $d = body();
         $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if (empty($_SESSION['dewaslaut_csrf']) || !hash_equals($_SESSION['dewaslaut_csrf'], $csrfToken)) {
+        $validCsrf = (!empty($_SESSION['dewaslaut_csrf']) && hash_equals($_SESSION['dewaslaut_csrf'], $csrfToken))
+                  || (!empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $csrfToken));
+        if (!$validCsrf) {
             reply(['error' => 'Sesi berakhir, muat ulang halaman'], 403);
         }
         session_write_close();
 
-        if (!isset($d['track']) || !is_int($d['track']) || $d['track'] < 1 || $d['track'] > 4) {
-            reply(['error' => 'Nomor file harus 1, 2, 3, atau 4'], 422);
+        if (!isset($d['track']) || !is_int($d['track']) || $d['track'] < 1 || $d['track'] > 10) {
+            reply(['error' => 'Nomor file audio tidak valid (1-10)'], 422);
         }
 
-        $devId = $d['device_id'] ?? $device;
+        $devId = $d['device_id'] ?? $_GET['device_id'] ?? $device;
         $q = db()->prepare("
             SELECT TIMESTAMPDIFF(SECOND, STR_TO_DATE(recorded_at, '%Y-%m-%d %H:%i:%s'), CURRENT_TIMESTAMP())
             FROM telemetry_logs
@@ -95,7 +96,8 @@ try {
 
     // 5. Polling Perintah Suara oleh ESP32
     if ($action === 'audio_command' && $method === 'GET') {
-        $devId = deviceAuth($device);
+        $devId = $_GET['device_id'] ?? $_SERVER['HTTP_X_DEVICE_ID'] ?? $device;
+        deviceAuth($devId);
         $q = db()->prepare("
             SELECT id, track
             FROM audio_commands
@@ -110,8 +112,9 @@ try {
 
     // 6. Acknowledgment Eksekusi Suara dari ESP32
     if ($action === 'audio_ack' && $method === 'POST') {
-        $devId = deviceAuth($device);
         $d = body();
+        $devId = $d['device_id'] ?? $_GET['device_id'] ?? $_SERVER['HTTP_X_DEVICE_ID'] ?? $device;
+        deviceAuth($devId);
         if (!isset($d['id']) || !is_int($d['id']) || $d['id'] < 1 || $d['id'] > 4294967295) {
             reply(['error' => 'ID perintah tidak valid'], 422);
         }
@@ -300,11 +303,12 @@ try {
 
     // 8. SIMPAN PENGATURAN KALIBRASI (Disimpan ke sensors.config JSON)
     if ($action === 'save' && $method === 'POST') {
-        requireOperator();
         session_start();
         $d = body();
         $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if (empty($_SESSION['dewaslaut_csrf']) || !hash_equals($_SESSION['dewaslaut_csrf'], $csrfToken)) {
+        $validCsrf = (!empty($_SESSION['dewaslaut_csrf']) && hash_equals($_SESSION['dewaslaut_csrf'], $csrfToken))
+                  || (!empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $csrfToken));
+        if (!$validCsrf) {
             reply(['error' => 'Sesi berakhir, muat ulang halaman'], 403);
         }
         session_write_close();
